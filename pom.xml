@@ -24,7 +24,7 @@
 
     <properties>
 		<webUtilsVersion>3.3.1</webUtilsVersion>
-        <mongo.version>4.8.1</mongo.version>
+        <mongo.version>4.11.5</mongo.version>
         <junit.version>4.13.2</junit.version>
     </properties>
 
