@@ -23,7 +23,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 
 import com.mongodb.DBObject;
 import io.vertx.core.AsyncResult;
@@ -36,6 +37,17 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public interface MongoDbAPI {
+
+	/** Fabrique partagée : newInstance() coûte cher et lève une exception vérifiée. */
+	DatatypeFactory DATATYPE_FACTORY = newDatatypeFactory();
+
+	static DatatypeFactory newDatatypeFactory() {
+		try {
+			return DatatypeFactory.newInstance();
+		} catch (DatatypeConfigurationException e) {
+			throw new IllegalStateException("javax.xml.datatype.DatatypeFactory indisponible", e);
+		}
+	}
 
 	public static final String ISO_DATE_FORMAT = "yyyy-MM-dd HH:mm.ss.SSS";
 
@@ -187,7 +199,10 @@ public interface MongoDbAPI {
 		if (d instanceof Long) {
 			return new Date((Long) d);
 		} else {
-			Calendar c = DatatypeConverter.parseDateTime((String) d);
+			// javax.xml.bind.DatatypeConverter a quitté le JDK en 11. DatatypeFactory
+			// est resté (module java.xml) et parse le même espace lexical xsd:dateTime,
+			// avec la même règle pour une valeur sans fuseau : le fuseau par défaut.
+			Calendar c = DATATYPE_FACTORY.newXMLGregorianCalendar((String) d).toGregorianCalendar();
 			return c.getTime();
 		}
 	}
